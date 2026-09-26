@@ -64,7 +64,19 @@
         <p>🐾 Gracias por visitar 🐾</p>
 
     </main>
+<script>
 
+fetch("/api/visit", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        pagina: location.pathname
+    })
+});
+
+</script>
 </body>
 
 </html>
