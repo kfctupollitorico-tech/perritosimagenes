@@ -23,31 +23,29 @@
             text-align: center;
         }
 
-        h1 {
-            margin: 0;
-        }
-
         main {
             padding: 30px;
-            overflow-x: auto;
         }
 
         .contador {
             background: white;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 18px;
             margin-bottom: 20px;
+            border-radius: 12px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            font-size: 18px;
+            font-size: 20px;
+        }
+
+        .tabla-contenedor {
+            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
         }
 
         th {
@@ -66,11 +64,11 @@
             background: #fff8ef;
         }
 
-        .vacio {
-            text-align: center;
-            padding: 30px;
+        #mensaje {
             background: white;
+            padding: 20px;
             border-radius: 12px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -85,27 +83,32 @@
     <main>
 
         <div class="contador">
-            👀 Visitas registradas: <strong id="total">0</strong>
+            👀 Visitas registradas:
+            <strong id="total">Cargando...</strong>
         </div>
 
-        <table id="tabla">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>IP</th>
-                    <th>Fecha y hora</th>
-                    <th>Navegador</th>
-                    <th>Página</th>
-                </tr>
-            </thead>
+        <div class="tabla-contenedor">
 
-            <tbody id="visitas">
-            </tbody>
-        </table>
+            <table>
 
-        <div id="vacio" class="vacio" style="display: none;">
-            🐶 Todavía no hay visitas registradas.
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>IP</th>
+                        <th>Fecha y hora</th>
+                        <th>Navegador</th>
+                        <th>Página</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabla-visitas">
+                </tbody>
+
+            </table>
+
         </div>
+
+        <div id="mensaje"></div>
 
     </main>
 
@@ -113,70 +116,56 @@
 
         async function cargarVisitas() {
 
+            const tabla = document.getElementById("tabla-visitas");
+            const total = document.getElementById("total");
+            const mensaje = document.getElementById("mensaje");
+
             try {
 
                 const respuesta = await fetch("/api/visitas");
 
-                const visitas = await respuesta.json();
+                if (!respuesta.ok) {
+                    throw new Error("Error HTTP: " + respuesta.status);
+                }
 
-                const tabla = document.getElementById("visitas");
-                const total = document.getElementById("total");
-                const vacio = document.getElementById("vacio");
+                const visitas = await respuesta.json();
 
                 tabla.innerHTML = "";
 
                 total.textContent = visitas.length;
 
-                if (visitas.length === 0) {
-                    document.getElementById("tabla").style.display = "none";
-                    vacio.style.display = "block";
-                    return;
-                }
-
-                document.getElementById("tabla").style.display = "table";
-                vacio.style.display = "none";
-
-                visitas.forEach((visita, indice) => {
+                visitas.forEach(function(visita, indice) {
 
                     const fila = document.createElement("tr");
 
-                    const numero = document.createElement("td");
-                    numero.textContent = indice + 1;
+                    fila.innerHTML = `
+                        <td>${indice + 1}</td>
+                        <td>${visita.ip}</td>
+                        <td>${new Date(visita.fecha).toLocaleString("es-PE")}</td>
+                        <td>${visita.navegador}</td>
+                        <td>${visita.pagina}</td>
+                    `;
 
-                    const ip = document.createElement("td");
-                    ip.textContent = visita.ip;
+                    tabla.appendChild(fila);
 
-                    const fecha = document.createElement("td");
-                    fecha.textContent = new Date(visita.fecha).toLocaleString("es-PE");
-
-                    const navegador = document.createElement("td");
-                    navegador.textContent = visita.navegador;
-
-                    const pagina = document.createElement("td");
-                    pagina.textContent = visita.pagina;
-
-                    fila.appendChild(numero);
-                    fila.appendChild(ip);
-                    fila.appendChild(fecha);
-                    fila.appendChild(navegador);
-                    fila.appendChild(pagina);
-
-                    tabla.querySelector("tbody").appendChild(fila);
                 });
+
+                mensaje.textContent = "";
 
             } catch (error) {
 
-                console.error("Error:", error);
+                console.error(error);
 
-                document.getElementById("visitas").innerHTML =
-                    "<tr><td colspan='5'>❌ No se pudieron cargar las visitas.</td></tr>";
+                total.textContent = "Error";
+
+                mensaje.textContent =
+                    "❌ No se pudieron cargar las visitas. Error: " + error.message;
+
             }
+
         }
 
         cargarVisitas();
-
-        // Actualizar cada 10 segundos
-        setInterval(cargarVisitas, 10000);
 
     </script>
 
@@ -184,3 +173,4 @@
 
 </html>
 ```
+
