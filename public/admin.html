@@ -1,0 +1,186 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Panel de visitas 🐶</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #fff3df;
+            color: #333;
+        }
+
+        header {
+            background: #8b5e3c;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        main {
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        .contador {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #8b5e3c;
+            color: white;
+            padding: 14px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:hover {
+            background: #fff8ef;
+        }
+
+        .vacio {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🐶 Panel de visitas</h1>
+        <p>Imágenes de Perrito</p>
+    </header>
+
+    <main>
+
+        <div class="contador">
+            👀 Visitas registradas: <strong id="total">0</strong>
+        </div>
+
+        <table id="tabla">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>IP</th>
+                    <th>Fecha y hora</th>
+                    <th>Navegador</th>
+                    <th>Página</th>
+                </tr>
+            </thead>
+
+            <tbody id="visitas">
+            </tbody>
+        </table>
+
+        <div id="vacio" class="vacio" style="display: none;">
+            🐶 Todavía no hay visitas registradas.
+        </div>
+
+    </main>
+
+    <script>
+
+        async function cargarVisitas() {
+
+            try {
+
+                const respuesta = await fetch("/api/visitas");
+
+                const visitas = await respuesta.json();
+
+                const tabla = document.getElementById("visitas");
+                const total = document.getElementById("total");
+                const vacio = document.getElementById("vacio");
+
+                tabla.innerHTML = "";
+
+                total.textContent = visitas.length;
+
+                if (visitas.length === 0) {
+                    document.getElementById("tabla").style.display = "none";
+                    vacio.style.display = "block";
+                    return;
+                }
+
+                document.getElementById("tabla").style.display = "table";
+                vacio.style.display = "none";
+
+                visitas.forEach((visita, indice) => {
+
+                    const fila = document.createElement("tr");
+
+                    const numero = document.createElement("td");
+                    numero.textContent = indice + 1;
+
+                    const ip = document.createElement("td");
+                    ip.textContent = visita.ip;
+
+                    const fecha = document.createElement("td");
+                    fecha.textContent = new Date(visita.fecha).toLocaleString("es-PE");
+
+                    const navegador = document.createElement("td");
+                    navegador.textContent = visita.navegador;
+
+                    const pagina = document.createElement("td");
+                    pagina.textContent = visita.pagina;
+
+                    fila.appendChild(numero);
+                    fila.appendChild(ip);
+                    fila.appendChild(fecha);
+                    fila.appendChild(navegador);
+                    fila.appendChild(pagina);
+
+                    tabla.querySelector("tbody").appendChild(fila);
+                });
+
+            } catch (error) {
+
+                console.error("Error:", error);
+
+                document.getElementById("visitas").innerHTML =
+                    "<tr><td colspan='5'>❌ No se pudieron cargar las visitas.</td></tr>";
+            }
+        }
+
+        cargarVisitas();
+
+        // Actualizar cada 10 segundos
+        setInterval(cargarVisitas, 10000);
+
+    </script>
+
+</body>
+
+</html>
+```
